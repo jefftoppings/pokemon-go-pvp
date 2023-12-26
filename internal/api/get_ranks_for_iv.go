@@ -34,18 +34,11 @@ func GetRanksForIV(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cpLimitStr := r.URL.Query().Get("cpLimit")
-	cpLimit, err := strconv.Atoi(cpLimitStr)
-	if err != nil {
-		http.Error(w, "Invalid 'defense' parameter", http.StatusBadRequest)
-		return
-	}
-
 	id := r.URL.Query().Get("id")
 
-	fmt.Printf("ID: %+v, Attack: %v, Defense: %v, Stamina: %v, CPLimit: %v\n", id, attack, defense, stamina, cpLimit)
+	fmt.Printf("ID: %+v, Attack: %v, Defense: %v, Stamina: %v", id, attack, defense, stamina)
 
-	results, err := get_ranks_for_iv.GetRanksForIV(id, attack, defense, stamina, cpLimit)
+	results, err := get_ranks_for_iv.GetRanksForIV(id, attack, defense, stamina)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Error getting ranks: %v", err)
 		http.Error(w, errorMsg, http.StatusInternalServerError)
