@@ -16,7 +16,6 @@ const (
 
 var (
 	allPokemon     []*model.Pokemon
-	allPokemonLock sync.RWMutex
 )
 
 func init() {
@@ -38,20 +37,37 @@ func loadPokemonData() {
 
 func SearchPokemon(name string, pageSize int) ([]*model.Pokemon, error) {
 	results := []*model.Pokemon{}
+	nameLower := strings.ToLower(name)
 
-	// filter pokemon by name
+	// Concurrently search for pokemon by name
+	resultChan := make(chan *model.Pokemon, len(allPokemon))
+	var wg sync.WaitGroup
+
 	for _, pokemon := range allPokemon {
-		nameLower := strings.ToLower(name)
-		pokemonNameLower := strings.ToLower(pokemon.Names.English)
-		if strings.Contains(pokemonNameLower, nameLower) {
-			if len(results) < pageSize {
-				results = append(results, pokemon)
-			} else {
-				break
+		wg.Add(1)
+		go func(pokemon *model.Pokemon) {
+			defer wg.Done()
+
+			pokemonNameLower := strings.ToLower(pokemon.Names.English)
+			if strings.Contains(pokemonNameLower, nameLower) {
+				resultChan <- pokemon
 			}
-		}
+		}(pokemon)
 	}
 
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect results
+	for result := range resultChan {
+		if len(results) < pageSize {
+			results = append(results, result)
+		} else {
+			break
+		}
+	}
 	return results, nil
 }
 
