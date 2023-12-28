@@ -14,6 +14,12 @@ const (
 	NOT_FOUND = "not found"
 )
 
+// pokemonEvolutions represents the structure of the evolutions.
+type pokemonEvolutions struct {
+	ID         string
+	Evolutions []*pokemonEvolutions
+}
+
 func GetRanksForIV(id string, attack int, defense int, stamina int) (*model.GetRanksForIVResponse, error) {
 	// id should be lower case for the file names
 	id = strings.ToLower(id)
@@ -62,25 +68,61 @@ func GetRanksForIV(id string, attack int, defense int, stamina int) (*model.GetR
 }
 
 func GetRanksForIVEvolutions(id string, attack int, defense int, stamina int) (*model.GetRanksForIVEvolutionsResponse, error) {
-	// id should be lower case for the file names
-	id = strings.ToLower(id)
+	id = strings.ToUpper(id)
+	// determine the evolutions to lookup
+	evolutions, err := getPokemonEvolutions(id)
+	if err != nil {
+		return nil, err
+	}
+	evolutionIDs := getEvolutionIDs(evolutions)
 
-	// determine evolution id's
-	var evolutionIDs []string
-	doneLookup := false
-	pageSize := 5
-	for !doneLookup {
-		resp, err := pokemon.SearchPokemon(id, pageSize)
+	// build up maps for response
+	rankForEvolutions := map[string]model.PokemonIVData{}
+	for _, evolutionID := range evolutionIDs {
+		ranks, err := GetRanksForIV(evolutionID, attack, defense, stamina)
 		if err != nil {
-			return nil, fmt.Errorf("ID %s %s in pokedex: %v", id, NOT_FOUND, err)
+			return nil, err
 		}
-		for _, pokemon := range resp {
-			for _, evolution := range pokemon.Evolutions {
-				evolutionIDs = append(evolutionIDs, evolution.ID)
-			}
-		}
+		rankForEvolutions[evolutionID] = ranks.GreatLeagueRank
 	}
 
-	// TODO
-	return nil, nil
+	return &model.GetRanksForIVEvolutionsResponse{
+		Evolutions:        evolutionIDs,
+		RankForEvolutions: rankForEvolutions,
+	}, nil
+}
+
+// getEvolutionIDs returns a slice of IDs of the evolutions in the given pokemonEvolutions.
+func getEvolutionIDs(evolution *pokemonEvolutions) []string {
+	var evolutionIDs []string
+	// Add the ID of the current evolution
+	evolutionIDs = append(evolutionIDs, evolution.ID)
+
+	// Add IDs of sub-evolutions
+	for _, subEvolution := range evolution.Evolutions {
+		evolutionIDs = append(evolutionIDs, getEvolutionIDs(subEvolution)...)
+	}
+	return evolutionIDs
+}
+
+// GetPokemonEvolutions retrieves the evolution chain for a given Pokemon ID.
+func getPokemonEvolutions(id string) (*pokemonEvolutions, error) {
+	pokemon, err := pokemon.GetPokemon(id)
+	if err != nil {
+		return nil, fmt.Errorf("ID %s %s: %v", id, NOT_FOUND, err)
+	}
+
+	evolutions := make([]*pokemonEvolutions, len(pokemon.Evolutions))
+	for i, evolution := range pokemon.Evolutions {
+		evolution, err := getPokemonEvolutions(evolution.ID)
+		if err != nil {
+			return nil, err
+		}
+		evolutions[i] = evolution
+	}
+
+	return &pokemonEvolutions{
+		ID:         id,
+		Evolutions: evolutions,
+	}, nil
 }
