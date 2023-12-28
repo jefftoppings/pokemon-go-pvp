@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jefftoppings/pokemon-go-pvp/internal/get_ranks_for_iv"
+	"github.com/jefftoppings/pokemon-go-pvp/internal/ranks"
 )
 
 // GetRanksForIV handles requests to /api/get-ranks-for-iv
@@ -21,9 +21,9 @@ func GetRanksForIV(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := get_ranks_for_iv.GetRanksForIV(id, attack, defense, stamina)
+	results, err := ranks.GetRanksForIV(id, attack, defense, stamina)
 	if err != nil {
-		if strings.Contains(err.Error(), get_ranks_for_iv.NOT_FOUND) {
+		if strings.Contains(err.Error(), ranks.NOT_FOUND) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -46,9 +46,9 @@ func GetRanksForIVEvolutions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := get_ranks_for_iv.GetRanksForIV(id, attack, defense, stamina)
+	results, err := ranks.GetRanksForIVEvolutions(id, attack, defense, stamina)
 	if err != nil {
-		if strings.Contains(err.Error(), get_ranks_for_iv.NOT_FOUND) {
+		if strings.Contains(err.Error(), ranks.NOT_FOUND) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}

@@ -1,4 +1,4 @@
-package get_ranks_for_iv
+package ranks
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jefftoppings/pokemon-go-pvp/internal/model"
+	"github.com/jefftoppings/pokemon-go-pvp/internal/pokemon"
 )
 
 const (
@@ -58,4 +59,28 @@ func GetRanksForIV(id string, attack int, defense int, stamina int) (*model.GetR
 		GreatLeagueRank: greatValue,
 		UltraLeagueRank: ultraValue,
 	}, nil
+}
+
+func GetRanksForIVEvolutions(id string, attack int, defense int, stamina int) (*model.GetRanksForIVEvolutionsResponse, error) {
+	// id should be lower case for the file names
+	id = strings.ToLower(id)
+
+	// determine evolution id's
+	var evolutionIDs []string
+	doneLookup := false
+	pageSize := 5
+	for !doneLookup {
+		resp, err := pokemon.SearchPokemon(id, pageSize)
+		if err != nil {
+			return nil, fmt.Errorf("ID %s %s in pokedex: %v", id, NOT_FOUND, err)
+		}
+		for _, pokemon := range resp {
+			for _, evolution := range pokemon.Evolutions {
+				evolutionIDs = append(evolutionIDs, evolution.ID)
+			}
+		}
+	}
+
+	// TODO
+	return nil, nil
 }

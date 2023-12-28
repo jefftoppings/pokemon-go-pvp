@@ -1,4 +1,4 @@
-package search
+package pokemon
 
 import (
 	"encoding/json"
@@ -9,10 +9,13 @@ import (
 	"github.com/jefftoppings/pokemon-go-pvp/internal/model"
 )
 
+const (
+	pokedexPath = "internal/assets/pokedex.json"
+)
+
 func SearchPokemon(name string, pageSize int) ([]model.Pokemon, error) {
 	results := []model.Pokemon{}
 
-	pokedexPath := "internal/assets/pokedex.json"
 	pokedexContent, err := ioutil.ReadFile(pokedexPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read pokedex JSON data: %v", err)
@@ -38,4 +41,26 @@ func SearchPokemon(name string, pageSize int) ([]model.Pokemon, error) {
 	}
 
 	return results, nil
+}
+
+func GetPokemon(id string) (*model.Pokemon, error) {
+	pokedexContent, err := ioutil.ReadFile(pokedexPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pokedex JSON data: %v", err)
+	}
+
+	// Unmarshal the JSON data into a slice of Pokemon
+	var allPokemon []*model.Pokemon
+	if err := json.Unmarshal(pokedexContent, &allPokemon); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON data: %v", err)
+	}
+
+	// find pokemon
+	for _, pokemon := range allPokemon {
+		if strings.ToLower(pokemon.ID) == strings.ToLower(id) {
+			return pokemon, nil
+		}
+	}
+
+	return nil, fmt.Errorf("pokemon with ID %s not found", id)
 }

@@ -43,6 +43,11 @@ type GetRanksForIVResponse struct {
 	UltraLeagueRank PokemonIVData `json:"ultraLeagueRank"`
 }
 
+type GetRanksForIVEvolutionsResponse struct {
+	GreatLeagueRankForEvolutions []PokemonIVData `json:"greatLeagueRankForEvolutions"`
+	UltraLeagueRankForEvoltions []PokemonIVData `json:"ultraLeagueRankForEvolutions"`
+}
+
 type PokemonIVData struct {
 	Ranks       map[string]int `json:"ranks"`
 	Ivs         string         `json:"ivs"`
