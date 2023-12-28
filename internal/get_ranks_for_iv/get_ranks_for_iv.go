@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/jefftoppings/pokemon-go-pvp/internal/model"
 )
@@ -13,6 +14,9 @@ const (
 )
 
 func GetRanksForIV(id string, attack int, defense int, stamina int) (*model.GetRanksForIVResponse, error) {
+	// id should be lower case for the file names
+	id = strings.ToLower(id)
+
 	// determine files to lookup data from
 	greatLeagueFile := fmt.Sprintf("internal/assets/data/great/%s.json", id)
 	ultraLeagueFile := fmt.Sprintf("internal/assets/data/ultra/%s.json", id)
