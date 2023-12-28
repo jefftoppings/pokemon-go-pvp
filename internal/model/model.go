@@ -38,15 +38,21 @@ type Evolution struct {
 	FormID string `json:"formId"`
 }
 
-type Rank struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Rank int    `json:"rank"`
-	CP   int    `json:"cp"`
+type GetRanksForIVResponse struct {
+	GreatLeagueRank PokemonIVData `json:"greatLeagueRank"`
+	UltraLeagueRank PokemonIVData `json:"ultraLeagueRank"`
 }
 
-type GetRanksForIVResponse struct {
-	GreatLeagueRank Rank `json:"greatLeagueRank"`
-	UltraLeagueRank Rank `json:"ultraLeagueRank"`
-	MasterLeagueRank Rank `json:"masterLeagueRank"`
+type PokemonIVData struct {
+	Ranks       map[string]int `json:"ranks"`
+	Ivs         string         `json:"ivs"`
+	Level       float64        `json:"level"`
+	CP          int            `json:"cp"`
+	StatProduct float64        `json:"statProduct"`
+	Percent     float64        `json:"percent"`
+	Stats       struct {
+		Atk float64 `json:"atk"`
+		Def float64 `json:"def"`
+		Hp  float64 `json:"hp"`
+	} `json:"stats"`
 }
