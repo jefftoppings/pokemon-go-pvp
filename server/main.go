@@ -28,7 +28,9 @@ func main() {
 
 	// Routes
 	r.HandleFunc("/api/search-pokemon", AuthMiddleware(api.SearchPokemon)).Methods("GET")
+	r.HandleFunc("/api/get-pokemon", AuthMiddleware(api.GetPokemon)).Methods("GET")
 	r.HandleFunc("/api/get-ranks-for-iv", AuthMiddleware(api.GetRanksForIV)).Methods("GET")
+	r.HandleFunc("/api/get-ranks-for-iv-evolutions", AuthMiddleware(api.GetRanksForIVEvolutions)).Methods("GET")
 
 	// Start the HTTP server
 	http.Handle("/", r)
