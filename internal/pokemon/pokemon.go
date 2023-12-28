@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
 
 	"github.com/jefftoppings/pokemon-go-pvp/internal/model"
 )
@@ -13,19 +14,30 @@ const (
 	pokedexPath = "internal/assets/pokedex.json"
 )
 
-func SearchPokemon(name string, pageSize int) ([]model.Pokemon, error) {
-	results := []model.Pokemon{}
+var (
+	allPokemon     []*model.Pokemon
+	allPokemonLock sync.RWMutex
+)
 
+func init() {
+	loadPokemonData()
+}
+
+func loadPokemonData() {
 	pokedexContent, err := ioutil.ReadFile(pokedexPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read pokedex JSON data: %v", err)
+		fmt.Printf("failed to read pokedex JSON pokedex data: %v", err)
+		return
 	}
 
-	// Unmarshal the JSON data into a slice of Pokemon
-	var allPokemon []model.Pokemon
 	if err := json.Unmarshal(pokedexContent, &allPokemon); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON data: %v", err)
+		fmt.Printf("failed to unmarshal JSON pokedex content: %v", err)
+		return
 	}
+}
+
+func SearchPokemon(name string, pageSize int) ([]*model.Pokemon, error) {
+	results := []*model.Pokemon{}
 
 	// filter pokemon by name
 	for _, pokemon := range allPokemon {
@@ -44,23 +56,47 @@ func SearchPokemon(name string, pageSize int) ([]model.Pokemon, error) {
 }
 
 func GetPokemon(id string) (*model.Pokemon, error) {
-	pokedexContent, err := ioutil.ReadFile(pokedexPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read pokedex JSON data: %v", err)
+	// find the specific pokemon
+	// split allPokemon into chunks of 100 to parallelize the process
+	const chunkSize = 100
+	numChunks := (len(allPokemon) + chunkSize - 1) / chunkSize
+	resultChan := make(chan *model.Pokemon, numChunks)
+	var wg sync.WaitGroup
+
+	for i := 0; i < numChunks; i++ {
+		start := i * chunkSize
+		end := (i + 1) * chunkSize
+		if end > len(allPokemon) {
+			end = len(allPokemon)
+		}
+
+		wg.Add(1)
+		go findPokemonInChunk(allPokemon[start:end], id, &wg, resultChan)
 	}
 
-	// Unmarshal the JSON data into a slice of Pokemon
-	var allPokemon []*model.Pokemon
-	if err := json.Unmarshal(pokedexContent, &allPokemon); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON data: %v", err)
-	}
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
 
-	// find pokemon
-	for _, pokemon := range allPokemon {
-		if strings.ToLower(pokemon.ID) == strings.ToLower(id) {
-			return pokemon, nil
+	for result := range resultChan {
+		if result != nil {
+			return result, nil
 		}
 	}
 
 	return nil, fmt.Errorf("pokemon with ID %s not found", id)
+}
+
+func findPokemonInChunk(chunk []*model.Pokemon, id string, wg *sync.WaitGroup, resultChan chan<- *model.Pokemon) {
+	defer wg.Done()
+
+	for _, pokemon := range chunk {
+		if strings.EqualFold(pokemon.ID, id) {
+			resultChan <- pokemon
+			return
+		}
+	}
+
+	resultChan <- nil
 }
