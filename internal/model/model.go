@@ -1,20 +1,20 @@
 package model
 
 type Pokemon struct {
-	ID                  string                   `json:"id"`
-	FormID              string                   `json:"formId"`
-	DexNr               int                      `json:"dexNr"`
-	Generation          int                      `json:"generation"`
-	Names               NameTranslations         `json:"names"`
-	Stats               PokemonStats             `json:"stats"`
-	PrimaryType         PokemonType              `json:"primaryType"`
-	SecondaryType       PokemonType              `json:"secondaryType"`
-	Assets              PokemonAssets            `json:"assets"`
-	Evolutions          []Evolution              `json:"evolutions"`
+	ID            string           `json:"id"`
+	FormID        string           `json:"formId"`
+	DexNr         int              `json:"dexNr"`
+	Generation    int              `json:"generation"`
+	Names         NameTranslations `json:"names"`
+	Stats         PokemonStats     `json:"stats"`
+	PrimaryType   PokemonType      `json:"primaryType"`
+	SecondaryType PokemonType      `json:"secondaryType"`
+	Assets        PokemonAssets    `json:"assets"`
+	Evolutions    []Evolution      `json:"evolutions"`
 }
 
 type NameTranslations struct {
-	English  string `json:"English"`
+	English string `json:"English"`
 }
 
 type PokemonStats struct {
@@ -34,6 +34,25 @@ type PokemonAssets struct {
 }
 
 type Evolution struct {
-	ID      string        `json:"id"`
-	FormID  string        `json:"formId"`
+	ID     string `json:"id"`
+	FormID string `json:"formId"`
+}
+
+type GetRanksForIVResponse struct {
+	GreatLeagueRank PokemonIVData `json:"greatLeagueRank"`
+	UltraLeagueRank PokemonIVData `json:"ultraLeagueRank"`
+}
+
+type PokemonIVData struct {
+	Ranks       map[string]int `json:"ranks"`
+	Ivs         string         `json:"ivs"`
+	Level       float64        `json:"level"`
+	CP          int            `json:"cp"`
+	StatProduct float64        `json:"statProduct"`
+	Percent     float64        `json:"percent"`
+	Stats       struct {
+		Atk float64 `json:"atk"`
+		Def float64 `json:"def"`
+		Hp  float64 `json:"hp"`
+	} `json:"stats"`
 }
