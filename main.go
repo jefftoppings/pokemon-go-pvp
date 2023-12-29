@@ -34,8 +34,8 @@ func main() {
 
 	// Start the HTTP server
 	http.Handle("/", r)
-	fmt.Println("Server is running on :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server is running on :8000")
+	http.ListenAndServe(":8000", nil)
 }
 
 // AuthMiddleware is a middleware function that checks for a valid API key in the request headers
