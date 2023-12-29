@@ -1,12 +1,24 @@
-FROM golang:1.19-alpine AS builder
+# Use an official Go runtime as a parent image
+FROM golang:1.20-alpine
+
+# Set the working directory in the container
 WORKDIR /app
-COPY . .
+
+# Copy the local package files to the container's workspace
+COPY go.mod .
+COPY go.sum .
+
+# Download and install dependencies
 RUN go mod download
-RUN go build -o ./pokemon-go-pvp ./server/main.go
- 
- 
-FROM alpine:latest AS runner
-WORKDIR /app
-COPY --from=builder /app/pokemon-go-pvp .
+
+# Copy the local source files to the container's workspace
+COPY . .
+
+# Build the Go application
+RUN go build -o pokemon-go-pvp
+
+# Expose the port the app runs on
 EXPOSE 8080
-ENTRYPOINT ["./pokemon-go-pvp"]
+
+# Command to run the executable
+CMD ["./pokemon-go-pvp"]
