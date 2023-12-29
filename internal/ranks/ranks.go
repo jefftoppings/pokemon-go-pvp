@@ -25,8 +25,8 @@ func GetRanksForIV(id string, attack int, defense int, stamina int) (*model.GetR
 	id = strings.ToLower(id)
 
 	// determine files to lookup data from
-	greatLeagueFile := fmt.Sprintf("internal/assets/data/great/%s.json", id)
-	ultraLeagueFile := fmt.Sprintf("internal/assets/data/ultra/%s.json", id)
+	greatLeagueFile := fmt.Sprintf("/internal/assets/data/great/%s.json", id)
+	ultraLeagueFile := fmt.Sprintf("/internal/assets/data/ultra/%s.json", id)
 
 	var greatLeagueDataMap map[string]model.PokemonIVData
 	var ultraLeagueDataMap map[string]model.PokemonIVData

@@ -18,7 +18,7 @@ type Config struct {
 var config Config
 
 func main() {
-	err := loadConfig("config.json")
+	err := loadConfig("/config.json")
 	if err != nil {
 		fmt.Println("Error loading configuration:", err)
 		return
