@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	pokedexPath = "/internal/assets/pokedex.json"
+	pokedexPath = "internal/assets/pokedex.json"
 )
 
 var (
