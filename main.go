@@ -1,36 +1,26 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/juju/ratelimit"
 
 	"github.com/jefftoppings/pokemon-go-pvp/internal/api"
 )
 
-type Config struct {
-	APIKey string `json:"api_key"`
-}
-
-var config Config
-
 func main() {
-	err := loadConfig("config.json")
-	if err != nil {
-		fmt.Println("Error loading configuration:", err)
-		return
-	}
-
 	r := mux.NewRouter()
+	apiRoutes := r.PathPrefix("/api").Subrouter()
+	apiRoutes.Use(rateLimitMiddleware)
 
 	// Routes
-	r.HandleFunc("/api/search-pokemon", AuthMiddleware(api.SearchPokemon)).Methods("GET")
-	r.HandleFunc("/api/get-pokemon", AuthMiddleware(api.GetPokemon)).Methods("GET")
-	r.HandleFunc("/api/get-ranks-for-iv", AuthMiddleware(api.GetRanksForIV)).Methods("GET")
-	r.HandleFunc("/api/get-ranks-for-iv-evolutions", AuthMiddleware(api.GetRanksForIVEvolutions)).Methods("GET")
+	apiRoutes.HandleFunc("/search-pokemon", api.SearchPokemon).Methods("GET")
+	apiRoutes.HandleFunc("/get-pokemon",api.GetPokemon).Methods("GET")
+	apiRoutes.HandleFunc("/get-ranks-for-iv",api.GetRanksForIV).Methods("GET")
+	apiRoutes.HandleFunc("/get-ranks-for-iv-evolutions", api.GetRanksForIVEvolutions).Methods("GET")
 
 	// Start the HTTP server
 	http.Handle("/", r)
@@ -38,30 +28,13 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 
-// AuthMiddleware is a middleware function that checks for a valid API key in the request headers
-func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		apiKeyFromRequest := r.Header.Get("X-API-Key")
-
-		if apiKeyFromRequest != config.APIKey {
-			http.Error(w, "Unauthorized. You need a valid api key to call this.", http.StatusUnauthorized)
-			return
+func rateLimitMiddleware(handler http.Handler) http.Handler {
+	bucket := ratelimit.NewBucket(time.Second, 10) // 10 requests per second
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if bucket.TakeAvailable(1) > 0 {
+			handler.ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		}
-
-		// Call the next handler if authentication is successful
-		next.ServeHTTP(w, r)
-	}
-}
-
-func loadConfig(filePath string) error {
-	fileContent, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read configuration file: %v", err)
-	}
-
-	if err := json.Unmarshal(fileContent, &config); err != nil {
-		return fmt.Errorf("failed to unmarshal configuration data: %v", err)
-	}
-
-	return nil
+	})
 }
