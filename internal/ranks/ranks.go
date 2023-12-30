@@ -77,13 +77,13 @@ func GetRanksForIVEvolutions(id string, attack int, defense int, stamina int) (*
 	evolutionIDs := getEvolutionIDs(evolutions)
 
 	// build up maps for response
-	rankForEvolutions := map[string]model.PokemonIVData{}
+	rankForEvolutions := map[string]model.GetRanksForIVResponse{}
 	for _, evolutionID := range evolutionIDs {
 		ranks, err := GetRanksForIV(evolutionID, attack, defense, stamina)
 		if err != nil {
 			return nil, err
 		}
-		rankForEvolutions[evolutionID] = ranks.GreatLeagueRank
+		rankForEvolutions[evolutionID] = *ranks
 	}
 
 	return &model.GetRanksForIVEvolutionsResponse{
