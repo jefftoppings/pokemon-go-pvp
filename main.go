@@ -15,6 +15,7 @@ func main() {
 	r := mux.NewRouter()
 	apiRoutes := r.PathPrefix("/api").Subrouter()
 	apiRoutes.Use(rateLimitMiddleware)
+	apiRoutes.Use(corsMiddleware)
 
 	// Routes
 	apiRoutes.HandleFunc("/search-pokemon", api.SearchPokemon).Methods("GET")
@@ -37,4 +38,37 @@ func rateLimitMiddleware(handler http.Handler) http.Handler {
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		}
 	})
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // List of allowed origins
+        allowedOrigins := []string{
+            "https://ionic-rank-checker.netlify.app/",
+            "http://localhost:8100",
+            "http://localhost:4200",
+        }
+
+        origin := r.Header.Get("Origin")
+        for _, allowedOrigin := range allowedOrigins {
+            if origin == allowedOrigin {
+                // Allow requests from the specific origin
+                w.Header().Set("Access-Control-Allow-Origin", origin)
+                break
+            }
+        }
+
+        // Allow other required headers
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+        if r.Method == "OPTIONS" {
+            // Preflight request, respond with success
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+
+        // Continue with the next handler
+        next.ServeHTTP(w, r)
+    })
 }
