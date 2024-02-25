@@ -23,8 +23,12 @@ func main() {
 	apiRoutes.HandleFunc("/get-ranks-for-iv",api.GetRanksForIV).Methods("GET")
 	apiRoutes.HandleFunc("/get-ranks-for-iv-evolutions", api.GetRanksForIVEvolutions).Methods("GET")
 
-	// Start the HTTP server
+	// Serve static files (for the frontend)
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("dist")))
+
 	http.Handle("/", r)
+
+	// Start the HTTP server
 	fmt.Println("Server is running on :8000")
 	http.ListenAndServe(":8000", nil)
 }
